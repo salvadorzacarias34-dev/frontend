@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MozLink - Feed</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background-color: #f0f2f5; color: #1c1e21; padding-top: 56px; }
+        header { background-color: #ffffff; height: 56px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; position: fixed; top: 0; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 100; }
+        .logo { color: #1877f2; font-size: 24px; font-weight: bold; text-decoration: none; }
+        .main-container { display: grid; grid-template-columns: 280px 1fr 300px; height: calc(100vh - 56px); }
+        .sidebar { padding: 16px; overflow-y: auto; }
+        .feed-container { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+        .feed-content { width: 100%; max-width: 500px; }
+        
+        /* Painel de Criação com Input de Ficheiro Estilizado */
+        .create-post { background-color: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 16px; }
+        .post-input-box { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; }
+        .profile-pic { width: 40px; height: 40px; border-radius: 50%; background-color: #1877f2; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; background-size: cover; background-position: center; flex-shrink: 0; }
+        .post-input { width: 100%; border: none; background-color: #f0f2f5; border-radius: 20px; padding: 10px 16px; outline: none; margin-bottom: 8px; }
+        
+        /* Upload Estilo Facebook */
+        .file-upload-wrapper { margin-bottom: 12px; display: flex; align-items: center; gap: 8px; background-color: #f8f9fa; border: 1px dashed #ced4da; padding: 10px; border-radius: 8px; }
+        .file-upload-label { font-size: 13px; font-weight: bold; color: #65676b; cursor: pointer; display: flex; align-items: center; gap: 6px; width: 100%; }
+        .file-upload-input { display: none; } 
+        .file-name-preview { font-size: 12px; color: #1877f2; font-style: italic; }
+
+        .publish-btn { background-color: #1877f2; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; }
+        .publish-btn:hover { background-color: #115cbf; }
+        
+        /* Cards do Feed */
+        .post-card { background-color: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 16px; }
+        .post-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .post-user-info { display: flex; align-items: center; gap: 12px; }
+        .delete-btn { background: none; border: none; color: #dc3545; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .delete-btn:hover { text-decoration: underline; }
+        .post-body { font-size: 15px; margin-bottom: 12px; line-height: 1.4; }
+        .post-image { width: 100%; max-height: 400px; object-fit: cover; border-radius: 6px; margin-bottom: 12px; }
+        
+        /* Contadores e Ações */
+        .post-counters { display: flex; justify-content: space-between; font-size: 13px; color: #65676b; padding-bottom: 8px; border-bottom: 1px solid #e4e6eb; }
+        .counter-link { cursor: pointer; }
+        .counter-link:hover { text-decoration: underline; }
+        .post-actions { display: flex; justify-content: space-around; padding: 6px 0; border-bottom: 1px solid #e4e6eb; }
+        .action-btn { background: none; border: none; color: #65676b; cursor: pointer; font-weight: bold; flex: 1; padding: 6px; text-align: center; font-size: 14px; }
+        .action-btn:hover { background-color: #f2f2f2; border-radius: 4px; }
+        .action-btn.liked { color: #1877f2; }
+        
+        /* Secção de Comentários */
+        .comments-section { margin-top: 12px; width: 100%; display: none; }
+        .comment-box { display: flex; gap: 8px; margin-bottom: 4px; align-items: center; margin-top: 12px; }
+        .comment-input { width: 100%; border: none; background-color: #f0f2f5; border-radius: 16px; padding: 8px 12px; outline: none; font-size: 14px; }
+        .comment-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 12px; }
+        .comment-item { display: flex; gap: 8px; align-items: flex-start; }
+        .comment-content { background-color: #f0f2f5; padding: 6px 12px; border-radius: 14px; max-width: 85%; font-size: 14px; }
+        .comment-content strong { font-size: 13px; color: #1c1e21; }
+
+        .logout-btn { background: none; border: none; color: #65676b; cursor: pointer; font-weight: bold; }
+        .profile-link { text-decoration: none; color: #1c1e21; }
+        .profile-link:hover { text-decoration: underline; }
+        @media (max-width: 900px) { .main-container { grid-template-columns: 1fr; } .sidebar { display: none; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="feed.html" class="logo">MozLink</a>
+        <button class="logout-btn" onclick="sair()">Sair</button>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <p>👋 Olá, <a href="profile.html" class="profile-link" style="color: #1877f2; font-weight: bold;"><span id="userSidebarName">Utilizador</span></a></p>
+        </aside>
+        
+        <main class="feed-container">
+            <div class="feed-content">
+                
+                <div class="create-post">
+                    <div class="post-input-box">
+                        <div class="profile-pic" id="userInitial">M</div>
+                        <input type="text" id="postText" class="post-input" placeholder="No que está a pensar hoje?">
+                    </div>
+                    
+                    <div class="file-upload-wrapper">
+                        <label for="postFile" class="file-upload-label">
+                            🖼️ Adicionar Foto/Vídeo do Dispositivo
+                        </label>
+                        <input type="file" id="postFile" class="file-upload-input" accept="image/*" onchange="mostrarNomeFicheiro()">
+                        <span id="fileNamePreview" class="file-name-preview"></span>
+                    </div>
+
+                    <button class="publish-btn" onclick="criarNovoPost()">Publicar no MozLink</button>
+                </div>
+
+                <div id="newsFeed"></div>
+
+            </div>
+        </main>
+
+        <aside class="sidebar"><strong>Contactos Online</strong></aside>
+    </div>
+
+    <script>
+        const userId = localStorage.getItem('mozlink_user_id');
+        const nomeUsuario = localStorage.getItem('mozlink_user_name');
+        const avatarUsuario = localStorage.getItem('mozlink_user_avatar') || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde";
+
+        if (!userId || !nomeUsuario) { sair(); }
+
+        document.getElementById('userSidebarName').innerText = nomeUsuario;
+        const divInicial = document.getElementById('userInitial');
+        divInicial.innerText = ""; 
+        divInicial.style.backgroundImage = `url('${avatarUsuario}')`;
+
+        let abasAbertas = {};
+
+        function mostrarNomeFicheiro() {
+            const input = document.getElementById('postFile');
+            const preview = document.getElementById('fileNamePreview');
+            if(input.files.length > 0) {
+                preview.innerText = `(${input.files[0].name})`;
+            } else {
+                preview.innerText = "";
+            }
+        }
+
+        // 🔄 1. CARREGAR POSTS
+        async function carregarPosts() {
+            try {
+                const resposta = await fetch('https://mozlink-backend.onrender.com/api/posts');
+                const posts = await resposta.json();
+                
+                const feed = document.getElementById('newsFeed');
+                feed.innerHTML = ""; 
+
+                posts.forEach(post => {
+                    adicionarCardAoFeed(post);
+                    if (abasAbertas[post.id]) {
+                        document.getElementById(`seccao-comentarios-${post.id}`).style.display = "block";
+                    }
+                });
+            } catch (erro) { console.error(erro); }
+        }
+
+        // 📡 2. ENVIAR O NOVO POST VIA FORMDATA
+        async function criarNovoPost() {
+            const campoTexto = document.getElementById('postText');
+            const campoFicheiro = document.getElementById('postFile');
+            
+            const texto = campoTexto.value.trim();
+            const temFicheiro = campoFicheiro.files.length > 0;
+            
+            if (texto === "" && !temFicheiro) return alert("Escreva algo ou selecione uma imagem para publicar!");
+
+            const formData = new FormData();
+            formData.append('userId', userId);
+            formData.append('userName', nomeUsuario);
+            formData.append('userAvatar', avatarUsuario);
+            formData.append('content', texto);
+            
+            if (temFicheiro) {
+                formData.append('imageFile', campoFicheiro.files[0]); 
+            }
+
+            try {
+                const resposta = await fetch('https://mozlink-backend.onrender.com/api/posts', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (resposta.ok) {
+                    campoTexto.value = ""; 
+                    campoFicheiro.value = ""; 
+                    document.getElementById('fileNamePreview').innerText = "";
+                    carregarPosts(); 
+                } else {
+                    alert("Erro ao publicar.");
+                }
+            } catch (erro) { alert("Sem conexão com o servidor."); }
+        }
+
+        // 🎨 DESENHAR CARDS DO FEED INTEGRADO COM LINKS DE PERFIL
+        function adicionarCardAoFeed(post) {
+            const feed = document.getElementById('newsFeed');
+            const card = document.createElement('div');
+            card.className = 'post-card';
+            
+            const imagemHtml = post.image ? `<img src="${post.image}" class="post-image" alt="Imagem do post">` : '';
+            const avatar = post.userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde";
+            
+            const listaLikes = post.likes || [];
+            const jaDeuGosto = listaLikes.includes(userId) ? 'liked' : '';
+            const textoGostos = listaLikes.length === 1 ? '1 Gosto' : `${listaLikes.length} Gostos`;
+
+            const listaComentarios = post.comments || [];
+            const textoComentarios = listaComentarios.length === 1 ? '1 Comentário' : `${listaComentarios.length} Comentários`;
+
+            const botaoEliminarHtml = post.userId === userId 
+                ? `<button class="delete-btn" onclick="eliminarPost('${post.id}')">Eliminar</button>` 
+                : '';
+
+            let comentariosHtml = '';
+            listaComentarios.forEach(com => {
+                const cAvatar = com.userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde";
+                comentariosHtml += `
+                    <div class="comment-item">
+                        <a href="profile.html?id=${com.userId}">
+                            <div class="profile-pic" style="width:32px; height:32px; background-image: url('${cAvatar}')"></div>
+                        </a>
+                        <div class="comment-content">
+                            <a href="profile.html?id=${com.userId}" class="profile-link">
+                                <strong>${com.userName}</strong>
+                            </a>
+                            <p style="margin-top: 2px;">${com.text}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="post-header">
+                    <div class="post-user-info">
+                        <a href="profile.html?id=${post.userId}">
+                            <div class="profile-pic" style="background-image: url('${avatar}')"></div>
+                        </a>
+                        <div>
+                            <a href="profile.html?id=${post.userId}" class="profile-link" style="font-weight: bold;">
+                                ${post.userName || 'Utilizador Anónimo'}
+                            </a><br>
+                            <small>Publicado em Moçambique · 🌍</small>
+                        </div>
+                    </div>
+                    ${botaoEliminarHtml}
+                </div>
+                <div class="post-body">${post.content}</div>
+                ${imagemHtml}
+                
+                <div class="post-counters">
+                    <span id="contagem-like-${post.id}">${textoGostos}</span>
+                    <span class="counter-link" onclick="alternarAbaComentarios('${post.id}')">${textoComentarios}</span>
+                </div>
+
+                <div class="post-actions">
+                    <button id="btn-like-${post.id}" class="action-btn ${jaDeuGosto}" onclick="alternarGosto('${post.id}')">👍 Gosto</button>
+                    <button class="action-btn" onclick="alternarAbaComentarios('${post.id}')">💬 Comentar</button>
+                </div>
+
+                <div class="comments-section" id="seccao-comentarios-${post.id}">
+                    <div class="comment-list" id="lista-comentarios-${post.id}">
+                        ${comentariosHtml}
+                    </div>
+                    <div class="comment-box">
+                        <div class="profile-pic" style="width:32px; height:32px; background-image: url('${avatarUsuario}')"></div>
+                        <input type="text" id="input-comentario-${post.id}" class="comment-input" placeholder="Escreve um comentário..." onkeydown="if(event.key === 'Enter') enviarComentario('${post.id}')">
+                    </div>
+                </div>
+            `;
+            feed.appendChild(card);
+        }
+
+        // 📡 ALTERNAR GOSTO
+        async function alternarGosto(postId) {
+            const botao = document.getElementById(`btn-like-${postId}`);
+            const contador = document.getElementById(`contagem-like-${postId}`);
+            try {
+                const resposta = await fetch(`https://mozlink-backend.onrender.com/api/posts/${postId}/like`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userId })
+                });
+                const resultado = await resposta.json();
+                if (resposta.ok) {
+                    botao.classList.toggle('liked', resultado.liked);
+                    contador.innerText = resultado.likesCount === 1 ? '1 Gosto' : `${resultado.likesCount} Gostos`;
+                }
+            } catch (erro) { console.error(erro); }
+        }
+
+        // 📡 ENVIAR COMENTÁRIO
+        async function enviarComentario(postId) {
+            const input = document.getElementById(`input-comentario-${postId}`);
+            const texto = input.value.trim();
+            if (texto === "") return;
+
+            try {
+                const resposta = await fetch('https://mozlink-backend.onrender.com/api/posts/' + postId + '/comment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, userName: nomeUsuario, userAvatar: avatarUsuario, text: texto })
+                });
+                if (resposta.ok) {
+                    input.value = "";
+                    abasAbertas[postId] = true;
+                    carregarPosts();
+                }
+            } catch (erro) { console.error(erro); }
+        }
+
+        // 📡 ELIMINAR POST
+        async function eliminarPost(postId) {
+            if (!confirm("Tens a certeza de que desejas apagar esta publicação?")) return;
+            try {
+                const resposta = await fetch(`https://mozlink-backend.onrender.com/api/posts/${postId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userId })
+                });
+                if (resposta.ok) { delete abasAbertas[postId]; carregarPosts(); }
+            } catch (erro) { console.error(erro); }
+        }
+
+        // 👁️ ALTERNAR EXIBIÇÃO DE COMENTÁRIOS
+        function alternarAbaComentarios(postId) {
+            const seccao = document.getElementById(`seccao-comentarios-${postId}`);
+            const estaAberto = seccao.style.display === "block";
+            seccao.style.display = estaAberto ? "none" : "block";
+            abasAbertas[postId] = !estaAberto;
+        }
+
+        function sair() { localStorage.clear(); window.location.href = 'index.html'; }
+        carregarPosts();
+    </script>
+</body>
+</html>

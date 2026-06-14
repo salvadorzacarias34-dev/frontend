@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MozLink - Entrar ou Registar</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { display: flex; width: 100%; max-width: 900px; justify-content: space-between; align-items: center; gap: 40px; }
+        .brand-section { max-width: 400px; }
+        .brand-section h1 { color: #1877f2; font-size: 50px; font-weight: bold; margin-bottom: 16px; letter-spacing: -1px; }
+        .brand-section p { font-size: 24px; line-height: 28px; color: #1c1e21; }
+        .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .form-box { display: none; flex-direction: column; gap: 12px; }
+        .form-box.active { display: flex; }
+        input { width: 100%; padding: 14px; border: 1px solid #dddfe2; border-radius: 6px; font-size: 16px; outline: none; }
+        input:focus { border-color: #1877f2; box-shadow: 0 0 0 2px #e7f3ff; }
+        .btn-blue { background-color: #1877f2; color: white; border: none; padding: 14px; border-radius: 6px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-blue:hover { background-color: #166fe5; }
+        .btn-green { background-color: #42b72a; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 17px; font-weight: bold; cursor: pointer; align-self: center; margin-top: 10px; transition: 0.2s; }
+        .btn-green:hover { background-color: #36a420; }
+        .divider { height: 1px; background-color: #dadde1; margin: 16px 0; }
+        .toggle-link { text-align: center; color: #1877f2; text-decoration: none; font-size: 14px; cursor: pointer; }
+        .toggle-link:hover { text-decoration: underline; }
+        @media (max-width: 768px) { .container { flex-direction: column; text-align: center; gap: 24px; } .brand-section h1 { font-size: 40px; } .brand-section p { font-size: 18px; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="brand-section">
+            <h1>MozLink</h1>
+            <p>O MozLink ajuda-o a ligar-se e a partilhar com as pessoas que fazem parte da sua vida em Moçambique.</p>
+        </div>
+
+        <div class="form-container">
+            <form id="loginForm" class="form-box active" onsubmit="handleLogin(event)">
+                <input type="email" id="loginEmail" placeholder="Endereço de e-mail" required>
+                <input type="password" id="loginPassword" placeholder="Palavra-passe" required>
+                <button type="submit" class="btn-blue">Iniciar Sessão</button>
+                <div class="divider"></div>
+                <button type="button" class="btn-green" onclick="switchForm('register')">Criar nova conta</button>
+            </form>
+
+            <form id="registerForm" class="form-box" onsubmit="handleRegister(event)">
+                <input type="text" id="regName" placeholder="Nome completo" required>
+                <input type="email" id="regEmail" placeholder="Endereço de e-mail" required>
+                <input type="password" id="regPassword" placeholder="Nova palavra-passe" required>
+                <button type="submit" class="btn-blue" style="background-color: #42b72a;">Registar</button>
+                <div class="divider"></div>
+                <span class="toggle-link" onclick="switchForm('login')">Já tem uma conta? Entrar</span>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function switchForm(type) {
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('registerForm').classList.remove('active');
+            if(type === 'login') { document.getElementById('loginForm').classList.add('active'); }
+            else { document.getElementById('registerForm').classList.add('active'); }
+        }
+
+        // LIGAÇÃO REAL DE REGISTO (Mapeado para a porta 5000 do Firebase Backend)
+        async function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            try {
+                const resposta = await fetch('https://mozlink-backend.onrender.com/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                const resultado = await resposta.json();
+
+                if (resposta.ok) {
+                    alert(resultado.message);
+                    switchForm('login'); 
+                } else {
+                    alert("Erro no Registo: " + (resultado.error || "Dados inválidos"));
+                }
+            } catch (erro) {
+                alert("Não foi possível conectar ao servidor da MozLink na porta 5000.");
+            }
+        }
+
+        // LIGAÇÃO REAL DE LOGIN (Mapeado para a porta 5000 do Firebase Backend)
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const resposta = await fetch('https://mozlink-backend.onrender.com/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const resultado = await resposta.json();
+
+                if (resposta.ok) {
+                    // Guarda as variáveis cruciais na memória do navegador para o feed usar
+                    localStorage.setItem('mozlink_user_id', resultado.userId);
+                    localStorage.setItem('mozlink_user_name', resultado.utilizador.name);
+                    localStorage.setItem('mozlink_user_avatar', resultado.utilizador.avatar);
+                    
+                    // Move o utilizador para a timeline da MozLink
+                    window.location.href = 'feed.html';
+                } else {
+                    alert("Erro no Login: " + (resultado.error || "Credenciais incorretas"));
+                }
+            } catch (erro) {
+                alert("Não foi possível conectar ao servidor da MozLink na porta 5000.");
+            }
+        }
+    </script>
+</body>
+</html>

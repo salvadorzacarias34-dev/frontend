@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MozLink - Perfil</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background-color: #f0f2f5; color: #1c1e21; padding-top: 56px; }
+        header { background-color: #ffffff; height: 56px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; position: fixed; top: 0; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 100; }
+        .logo { color: #1877f2; font-size: 24px; font-weight: bold; text-decoration: none; }
+        
+        .profile-container { width: 100%; max-width: 940px; margin: 0 auto; background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        
+        /* Capa Alterada para suportar edição */
+        .cover-wrapper { position: relative; width: 100%; height: 350px; background-color: #ced4da; background-size: cover; background-position: center; }
+        .btn-edit-cover { position: absolute; right: 16px; bottom: 16px; background: rgba(0,0,0,0.6); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; display: none; }
+        
+        .profile-info-bar { display: flex; align-items: flex-end; padding: 0 32px 24px 32px; position: relative; margin-top: -30px; border-bottom: 1px solid #e4e6eb; background: white; }
+        
+        /* Avatar Alterado com overlay de câmara */
+        .avatar-container { position: relative; width: 168px; height: 168px; margin-top: -100px; z-index: 2; }
+        .profile-avatar-big { width: 100%; height: 100%; border-radius: 50%; border: 5px solid white; background-size: cover; background-position: center; background-color: #1877f2; }
+        .change-avatar-overlay { position: absolute; bottom: 8px; right: 8px; background-color: #e4e6eb; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); display: none; }
+        
+        .profile-text-info { margin-left: 24px; margin-bottom: 12px; flex: 1; }
+        .profile-text-info h1 { font-size: 32px; font-weight: bold; }
+        .profile-text-info p { color: #65676b; font-size: 15px; margin-top: 4px; }
+        
+        .profile-action-btns { margin-bottom: 12px; display: flex; gap: 8px; }
+        .btn-action { border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; }
+        .btn-primary-moz { background-color: #1877f2; color: white; }
+        .btn-primary-moz:hover { background-color: #115cbf; }
+        .btn-secondary-moz { background-color: #e4e6eb; color: #1c1e21; }
+        .btn-secondary-moz:hover { background-color: #d8dadf; }
+
+        .profile-content-grid { display: grid; grid-template-columns: 360px 1fr; max-width: 940px; margin: 16px auto; gap: 16px; padding: 0 16px; }
+        .profile-sidebar-box { background-color: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); height: fit-content; }
+        .profile-sidebar-box h3 { margin-bottom: 12px; font-size: 20px; }
+        
+        .feed-column { display: flex; flex-direction: column; }
+        
+        .post-card { background-color: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 16px; }
+        .post-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .post-user-info { display: flex; align-items: center; gap: 12px; }
+        .profile-pic { width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; }
+        .delete-btn { background: none; border: none; color: #dc3545; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .post-body { font-size: 15px; margin-bottom: 12px; line-height: 1.4; }
+        .post-image { width: 100%; max-height: 400px; object-fit: cover; border-radius: 6px; margin-bottom: 12px; }
+        
+        .nav-links { display: flex; gap: 16px; align-items: center; }
+        .nav-links a { text-decoration: none; color: #65676b; font-weight: bold; font-size: 15px; }
+        
+        /* 💬 JANELA DE CHAT FLUTUANTE (Opção C) */
+        .chat-window { position: fixed; bottom: 0; right: 40px; width: 300px; height: 380px; background: white; border-radius: 8px 8px 0 0; box-shadow: 0 4px 12px rgba(0,0,0,0.25); display: none; flex-direction: column; z-index: 200; border: 1px solid #ced4da; }
+        .chat-header { background: #1877f2; color: white; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; }
+        .chat-close-btn { background: none; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .chat-messages { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #f0f2f5; }
+        .msg { padding: 8px 12px; border-radius: 14px; max-width: 80%; font-size: 14px; word-break: break-word; }
+        .msg.me { background: #0084ff; color: white; align-self: flex-end; }
+        .msg.them { background: #e4e6eb; color: black; align-self: flex-start; }
+        .chat-footer { padding: 8px; display: flex; gap: 6px; border-top: 1px solid #ced4da; }
+        .chat-input { flex: 1; border: 1px solid #ced4da; border-radius: 20px; padding: 6px 12px; outline: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display: flex; align-items: center; gap: 24px;">
+            <a href="feed.html" class="logo">MozLink</a>
+            <nav class="nav-links"><a href="feed.html">Página Inicial</a></nav>
+        </div>
+        <button class="delete-btn" style="color:#65676b; font-size:15px;" onclick="sair()">Sair</button>
+    </header>
+
+    <div class="profile-container">
+        <div class="cover-wrapper" id="userCover">
+            <button id="btnCoverEdit" class="btn-edit-cover" onclick="document.getElementById('inputCoverFile').click()">📷 Editar Capa</button>
+            <input type="file" id="inputCoverFile" style="display:none;" accept="image/*" onchange="enviarFoto('coverPhoto', this)">
+        </div>
+        
+        <div class="profile-info-bar">
+            <div class="avatar-container">
+                <div class="profile-avatar-big" id="userAvatarBig"></div>
+                <label id="btnAvatarEdit" class="change-avatar-overlay" onclick="document.getElementById('inputAvatarFile').click()">
+                    📷
+                </label>
+                <input type="file" id="inputAvatarFile" style="display:none;" accept="image/*" onchange="enviarFoto('avatar', this)">
+            </div>
+            
+            <div class="profile-text-info">
+                <h1 id="profileName">Carregando...</h1>
+                <p id="profileFriendsCount">0 amigos</p>
+            </div>
+            <div class="profile-action-btns">
+                <button id="btnFriendAction" class="btn-action btn-primary-moz" onclick="gerirAmizade()">Adicionar Amigo</button>
+                <button id="btnMsgAction" class="btn-action btn-secondary-moz" onclick="abrirChat()">Mensagem</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-content-grid">
+        <aside class="profile-sidebar-box">
+            <h3>Detalhes</h3>
+            <p style="margin-bottom: 8px;">📧 <span id="profileEmail">...</span></p>
+            <p style="color: #65676b; font-size: 14px;">Membro da MozLink Network 🌍</p>
+        </aside>
+
+        <section class="feed-column">
+            <h2 style="font-size: 18px; margin-bottom: 12px; color: #65676b;">Publicações</h2>
+            <div id="userFeed"></div>
+        </section>
+    </div>
+
+    <div class="chat-window" id="mozChat">
+        <div class="chat-header">
+            <span id="chatTargetName">Conversa</span>
+            <button class="chat-close-btn" onclick="fecharChat()">X</button>
+        </div>
+        <div class="chat-messages" id="chatScreen"></div>
+        <div class="chat-footer">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Escreve uma mensagem..." onkeydown="if(event.key==='Enter') mandarMensagem()">
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let perfilVisitadoId = urlParams.get('id');
+        const meuId = localStorage.getItem('mozlink_user_id');
+        
+        if (!meuId) { sair(); }
+        if (!perfilVisitadoId) { perfilVisitadoId = meuId; }
+
+        let nomeDoAlvo = "";
+        let intervaloChat = null;
+
+        // Se o perfil for o meu próprio, ativo as opções de edição de fotos
+        if (perfilVisitadoId === meuId) {
+            document.getElementById('btnFriendAction').style.display = 'none';
+            document.getElementById('btnMsgAction').style.display = 'none';
+            document.getElementById('btnCoverEdit').style.display = 'block';
+            document.getElementById('btnAvatarEdit').style.display = 'flex';
+        }
+
+        async function carregarDadosDoPerfil() {
+            try {
+                const resposta = await fetch(`https://mozlink-backend.onrender.com/api/users/${perfilVisitadoId}`);
+                const dados = await resposta.json();
+
+                if (resposta.ok) {
+                    nomeDoAlvo = dados.name;
+                    document.getElementById('profileName').innerText = dados.name;
+                    document.getElementById('profileEmail').innerText = dados.email;
+                    document.getElementById('userAvatarBig').style.backgroundImage = `url('${dados.avatar}')`;
+                    document.getElementById('userCover').style.backgroundImage = `url('${dados.coverPhoto}')`;
+                    document.getElementById('chatTargetName').innerText = dados.name;
+                    
+                    const amigos = dados.friends || [];
+                    document.getElementById('profileFriendsCount').innerText = amigos.length === 1 ? '1 amigo' : `${amigos.length} amigos`;
+                    
+                    // Se estou a visitar outra pessoa, vejo se já somos amigos
+                    if (perfilVisitadoId !== meuId) {
+                        const minhaResposta = await fetch(`https://mozlink-backend.onrender.com/api/users/${meuId}`);
+                        const meusDados = await minhaResposta.json();
+                        if (meusDados.friends && meusDados.friends.includes(perfilVisitadoId)) {
+                            const btn = document.getElementById('btnFriendAction');
+                            btn.innerText = "Remover Amigo";
+                            btn.className = "btn-action btn-secondary-moz";
+                        }
+                    }
+                }
+            } catch (erro) { console.error(erro); }
+        }
+
+        // 📸 ENVIAR FOTO REAL PARA O SERVIDOR (Opção A)
+        async function enviarFoto(tipo, input) {
+            if (input.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('photoFile', input.files[0]);
+            formData.append('type', tipo);
+
+            try {
+                const resposta = await fetch(`https://mozlink-backend.onrender.com/api/users/${meuId}/upload-photo`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const resultado = await resposta.json();
+
+                if (resposta.ok) {
+                    // Se mudou o avatar, atualiza também o LocalStorage para o feed carregar a foto nova
+                    if (tipo === 'avatar') {
+                        localStorage.setItem('mozlink_user_avatar', resultado.imageUrl);
+                    }
+                    window.location.reload();
+                } else {
+                    alert("Erro ao enviar foto.");
+                }
+            } catch (e) { alert("Erro na ligação ao servidor."); }
+        }
+
+        async function carregarPostsDoUtilizador() {
+            try {
+                const resposta = await fetch('https://mozlink-backend.onrender.com/api/posts');
+                const posts = await resposta.json();
+                const feed = document.getElementById('userFeed');
+                feed.innerHTML = "";
+
+                const postsFiltrados = posts.filter(post => post.userId === perfilVisitadoId);
+
+                if (postsFiltrados.length === 0) {
+                    feed.innerHTML = "<p style='color:#65676b; text-align:center; margin-top:20px;'>Sem publicações.</p>";
+                    return;
+                }
+
+                postsFiltrados.forEach(post => {
+                    const card = document.createElement('div');
+                    card.className = 'post-card';
+                    const imagemHtml = post.image ? `<img src="${post.image}" class="post-image">` : '';
+                    
+                    card.innerHTML = `
+                        <div class="post-header">
+                            <div class="post-user-info">
+                                <div class="profile-pic" style="background-image: url('${post.userAvatar}')"></div>
+                                <div>
+                                    <strong>${post.userName}</strong><br>
+                                    <small>Publicado em Moçambique · 🌍</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="post-body">${post.content}</div>
+                        ${imagemHtml}
+                    `;
+                    feed.appendChild(card);
+                });
+            } catch (erro) { console.error(erro); }
+        }
+
+        async function gerirAmizade() {
+            try {
+                const resposta = await fetch(`https://mozlink-backend.onrender.com/api/users/follow`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ meuId: meuId, alvoId: perfilVisitadoId })
+                });
+                if (resposta.ok) window.location.reload();
+            } catch (erro) { alert("Erro de rede."); }
+        }
+
+        // 💬 SISTEMA DE CHAT EM TEMPO REAL (Opção C)
+        function abrirChat() {
+            document.getElementById('mozChat').style.display = 'flex';
+            descarregarMensagens();
+            // Verifica mensagens novas a cada 3 segundos automaticamente
+            intervaloChat = setInterval(descarregarMensagens, 3000);
+        }
+
+        function fecharChat() {
+            document.getElementById('mozChat').style.display = 'none';
+            clearInterval(intervaloChat);
+        }
+
+        async function descarregarMensagens() {
+            try {
+                const resposta = await fetch(`https://mozlink-backend.onrender.com/api/messages/${meuId}/${perfilVisitadoId}`);
+                const lista = await resposta.json();
+                const ecrã = document.getElementById('chatScreen');
+                
+                // Guarda a posição do scroll para saber se o utilizador está no fim
+                const subiuScroll = ecrã.scrollTop + ecrã.clientHeight < ecrã.scrollHeight;
+
+                ecrã.innerHTML = "";
+                lista.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = m.remetenteId === meuId ? 'msg me' : 'msg them';
+                    div.innerText = m.texto;
+                    ecrã.appendChild(div);
+                });
+
+                // Faz scroll automático se o utilizador não estiver a ler mensagens antigas acima
+                if (!subiuScroll) { ecrã.scrollTop = ecrã.scrollHeight; }
+            } catch (e) { console.error("Erro ao carregar chat", e); }
+        }
+
+        async function mandarMensagem() {
+            const input = document.getElementById('chatInput');
+            const texto = input.value.trim();
+            if (texto === "") return;
+
+            try {
+                const resposta = await fetch(`https://mozlink-backend.onrender.com/api/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ remetenteId: meuId, destinatarioId: perfilVisitadoId, texto })
+                });
+
+                if (resposta.ok) {
+                    input.value = "";
+                    descarregarMensagens();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function sair() { localStorage.clear(); window.location.href = 'index.html'; }
+
+        carregarDadosDoPerfil();
+        carregarPostsDoUtilizador();
+    </script>
+</body>
+</html>
