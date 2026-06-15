@@ -126,7 +126,6 @@
             }
         }
 
-        // 🔄 1. CARREGAR POSTS
         async function carregarPosts() {
             try {
                 const resposta = await fetch('https://mozlink-backend.onrender.com/api/posts');
@@ -144,7 +143,6 @@
             } catch (erro) { console.error(erro); }
         }
 
-        // 📡 2. ENVIAR O NOVO POST VIA FORMDATA
         async function criarNovoPost() {
             const campoTexto = document.getElementById('postText');
             const campoFicheiro = document.getElementById('postFile');
@@ -181,13 +179,18 @@
             } catch (erro) { alert("Sem conexão com o servidor."); }
         }
 
-        // 🎨 DESENHAR CARDS DO FEED INTEGRADO COM LINKS DE PERFIL
         function adicionarCardAoFeed(post) {
             const feed = document.getElementById('newsFeed');
             const card = document.createElement('div');
             card.className = 'post-card';
             
-            const imagemHtml = post.image ? `<img src="${post.image}" class="post-image" alt="Imagem do post">` : '';
+            // CORREÇÃO: Substitui localhost pelo link do Render, se necessário
+            let imageUrl = post.image;
+            if (imageUrl && imageUrl.includes('localhost:5000')) {
+                imageUrl = imageUrl.replace('http://localhost:5000', 'https://mozlink-backend.onrender.com');
+            }
+            
+            const imagemHtml = imageUrl ? `<img src="${imageUrl}" class="post-image" alt="Imagem do post">` : '';
             const avatar = post.userAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde";
             
             const listaLikes = post.likes || [];
@@ -260,7 +263,6 @@
             feed.appendChild(card);
         }
 
-        // 📡 ALTERNAR GOSTO
         async function alternarGosto(postId) {
             const botao = document.getElementById(`btn-like-${postId}`);
             const contador = document.getElementById(`contagem-like-${postId}`);
@@ -278,7 +280,6 @@
             } catch (erro) { console.error(erro); }
         }
 
-        // 📡 ENVIAR COMENTÁRIO
         async function enviarComentario(postId) {
             const input = document.getElementById(`input-comentario-${postId}`);
             const texto = input.value.trim();
@@ -298,11 +299,10 @@
             } catch (erro) { console.error(erro); }
         }
 
-        // 📡 ELIMINAR POST
         async function eliminarPost(postId) {
             if (!confirm("Tens a certeza de que desejas apagar esta publicação?")) return;
             try {
-                const resposta = await fetch(`https://mozlink-backend.onrender.com/api/posts/${postId}`, {
+                const resposta = await fetch(`https://mozlink-backend.net/api/posts/${postId}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: userId })
@@ -311,7 +311,6 @@
             } catch (erro) { console.error(erro); }
         }
 
-        // 👁️ ALTERNAR EXIBIÇÃO DE COMENTÁRIOS
         function alternarAbaComentarios(postId) {
             const seccao = document.getElementById(`seccao-comentarios-${postId}`);
             const estaAberto = seccao.style.display === "block";
