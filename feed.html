@@ -52,7 +52,7 @@
 
         <aside class="sidebar"><strong>Mensagens (Clique para abrir)</strong>
             <div id="lista-contactos" style="margin-top:10px;">
-                <p style="font-size:12px; color:#666;">Lista de amigos em desenvolvimento...</p>
+                <p style="font-size:12px; color:#666;">Carregando amigos...</p>
             </div>
         </aside>
     </div>
@@ -74,6 +74,31 @@
         const nomeUsuario = localStorage.getItem('mozlink_user_name');
         let destinatarioAtual = null;
 
+        // Ao carregar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('userSidebarName').innerText = nomeUsuario;
+            carregarContactos();
+        });
+
+        async function carregarContactos() {
+            try {
+                const res = await fetch('https://mozlink-backend.onrender.com/api/users/all');
+                const utilizadores = await res.json();
+                const lista = document.getElementById('lista-contactos');
+                lista.innerHTML = "";
+                
+                utilizadores.forEach(u => {
+                    if (u.id !== userId) {
+                        const div = document.createElement('div');
+                        div.style.cssText = "padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px;";
+                        div.innerHTML = `<div class="profile-pic" style="width: 30px; height: 30px;">${u.name[0]}</div><span>${u.name}</span>`;
+                        div.onclick = () => iniciarChat(u.id, u.name);
+                        lista.appendChild(div);
+                    }
+                });
+            } catch (e) { console.error("Erro ao carregar contactos", e); }
+        }
+
         function iniciarChat(amigoId, nome) {
             destinatarioAtual = amigoId;
             document.getElementById('nome-chat-amigo').innerText = nome;
@@ -89,7 +114,7 @@
             const area = document.getElementById('mensagens-area');
             area.innerHTML = mensagens.map(m => `
                 <div style="margin-bottom:5px; text-align: ${m.remetenteId === userId ? 'right' : 'left'}">
-                    <span style="background:${m.remetenteId === userId ? '#1877f2' : '#eee'}; color:${m.remetenteId === userId ? 'white' : 'black'}; padding:5px 10px; border-radius:10px;">
+                    <span style="display:inline-block; background:${m.remetenteId === userId ? '#1877f2' : '#eee'}; color:${m.remetenteId === userId ? 'white' : 'black'}; padding:5px 10px; border-radius:10px;">
                         ${m.texto}
                     </span>
                 </div>
@@ -111,7 +136,6 @@
         }
 
         function sair() { localStorage.clear(); window.location.href = 'index.html'; }
-        // Restante das tuas funções (carregarPosts, etc) continuam aqui embaixo...
     </script>
 </body>
 </html>
